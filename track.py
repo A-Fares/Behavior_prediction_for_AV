@@ -1,6 +1,6 @@
 # limit the number of cpus used by high performance libraries
+import pandas as pd
 import os
-
 import numpy as np
 
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
@@ -110,6 +110,7 @@ def detect(opt):
     # extract what is in between the last '/' and last '.'
     txt_file_name = source.split('/')[-1].split('.')[0]
     txt_path = str(Path(save_dir)) + '/' + txt_file_name + '.txt'
+    csv_path = str(Path(save_dir)) + '/' + txt_file_name + '.csv'
 
     if pt and device.type != 'cpu':
         model(torch.zeros(1, 3, *imgsz).to(device).type_as(next(model.model.parameters())))  # warmup
@@ -117,6 +118,7 @@ def detect(opt):
 
     # Initialize tracking dictonary
     tracking = defaultdict(list)
+
 
     for frame_idx, (path, img, im0s, vid_cap, s) in enumerate(dataset):
         t1 = time_sync()
@@ -216,6 +218,22 @@ def detect(opt):
                             with open(txt_path, 'a') as f:
                                 f.write(('%g ' * 10 + '\n') % (frame_idx + 1, id, bbox_left,  # MOT format
                                                                bbox_top, bbox_w, bbox_h, -1, -1, -1, -1))
+
+                            data={
+                                'frame_idx': frame_idx,
+                                'id': id,
+                                'cls': cls,
+                                'bbox_left': bbox_left,
+                                'bbox_top': bbox_top,
+                                'bbox_w': bbox_w,
+                                'bbox_h': bbox_h,
+                                'conf': float(conf)
+                            }
+                            df = pd.DataFrame(data, index=[0])
+                            df.to_csv(csv_path, mode='a', index=False, header=False)
+                                ## csv format
+                                ## lstm
+                                ## prediction cvs
 
                 LOGGER.info(f'{s}Done. YOLO:({t3 - t2:.3f}s), DeepSort:({t5 - t4:.3f}s)')
 
