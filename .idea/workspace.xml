@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="358ec643-55b7-42a0-9ad2-72ec74a17b42" name="Changes" comment="save tracking output into csv">
+    <list default="true" id="358ec643-55b7-42a0-9ad2-72ec74a17b42" name="Changes" comment="predict the next move of objects in next frame in file. track.py updated">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.py" beforeDir="false" afterPath="$PROJECT_DIR$/go.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/track.py" beforeDir="false" afterPath="$PROJECT_DIR$/track.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -88,7 +87,7 @@
       <workItem from="1650654196477" duration="103000" />
       <workItem from="1650654337668" duration="930000" />
       <workItem from="1650655303934" duration="7623000" />
-      <workItem from="1650670697527" duration="28515000" />
+      <workItem from="1650670697527" duration="29123000" />
     </task>
     <task id="LOCAL-00001" summary="download yolov5m weights">
       <created>1650502794246</created>
@@ -104,7 +103,14 @@
       <option name="project" value="LOCAL" />
       <updated>1650604551511</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="predict the next move of objects in next frame in file. track.py updated">
+      <created>1650756669162</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1650756669162</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -124,7 +130,8 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="download yolov5m weights" />
     <MESSAGE value="save tracking output into csv" />
-    <option name="LAST_COMMIT_MESSAGE" value="save tracking output into csv" />
+    <MESSAGE value="predict the next move of objects in next frame in file. track.py updated" />
+    <option name="LAST_COMMIT_MESSAGE" value="predict the next move of objects in next frame in file. track.py updated" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
