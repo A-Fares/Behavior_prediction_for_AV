@@ -119,7 +119,6 @@ def detect(opt):
     # Initialize tracking dictonary
     tracking = defaultdict(list)
 
-
     for frame_idx, (path, img, im0s, vid_cap, s) in enumerate(dataset):
         t1 = time_sync()
         img = torch.from_numpy(img).to(device)
@@ -173,10 +172,6 @@ def detect(opt):
                 # pass detections to deepsort
                 t4 = time_sync()
                 outputs = deepsort.update(xywhs.cpu(), confs.cpu(), clss.cpu(), im0)
-                t5 = time_sync()
-                dt[3] += t5 - t4
-
-
                 # draw boxes for visualization
                 if len(outputs) > 0:
                     for j, (output, conf) in enumerate(zip(outputs, confs)):
@@ -191,49 +186,94 @@ def detect(opt):
                         label = f'{names[c]}:{id}, Conf:{conf:.2f}'
                         annotator.box_label(bboxes, label, color=colors(c, True))
 
-                        # draw tracking
-                        # for id_, outputs_ in tracking.items():
-                        #     for k in range(1, len(outputs_)):
-                        #         #center = (int(((j[0]) + (j[2])) / 2), int(((j[1]) + (j[3])) / 2))
-                        #         if outputs_[k - 1] is None or outputs_[k] is None:
-                        #             continue
-                        #         thickness = int(np.sqrt(64 / float(k + 1)) * 2)
-                        #         img = np.array(im0)
-                        #         print(int(outputs_[k - 1]))
-                        #         cv2.line(im0, (int(outputs_[k - 1])), (int(outputs_[k])), c, thickness)
-
-                            # for j in range(1, len(pts[track.track_id])):
-                            #     if pts[track.track_id][j - 1] is None or pts[track.track_id][j] is None:
-                            #         continue
-                            #     thickness = int(np.sqrt(64 / float(j + 1)) * 2)
-                            #     cv2.line(img, (pts[track.track_id][j - 1]), (pts[track.track_id][j]), color, thickness)
-
                         if save_txt:
                             # to MOT format
-                            bbox_left = output[0]
-                            bbox_top = output[1]
-                            bbox_w = output[2] - output[0]
-                            bbox_h = output[3] - output[1]
+                            x1 = output[0]
+                            y1 = output[1]
+                            x2 = output[2] - output[0]
+                            y2 = output[3] - output[1]
                             # Write MOT compliant results to file
                             with open(txt_path, 'a') as f:
-                                f.write(('%g ' * 10 + '\n') % (frame_idx + 1, id, bbox_left,  # MOT format
-                                                               bbox_top, bbox_w, bbox_h, -1, -1, -1, -1))
+                                f.write(('%g ' * 10 + '\n') % (frame_idx + 1, id, x1,  # MOT format
+                                                               y1, x2, y2, -1, -1, -1, -1))
 
-                            data={
+                            data = {
                                 'frame_idx': frame_idx,
                                 'id': id,
                                 'cls': cls,
-                                'bbox_left': bbox_left,
-                                'bbox_top': bbox_top,
-                                'bbox_w': bbox_w,
-                                'bbox_h': bbox_h,
+                                'x1': x1,
+                                'y1': y1,
+                                'x2': x2,
+                                'y2': y2,
                                 'conf': float(conf)
                             }
                             df = pd.DataFrame(data, index=[0])
                             df.to_csv(csv_path, mode='a', index=False, header=False)
-                                ## csv format
-                                ## lstm
-                                ## prediction cvs
+
+                if len(outputs) > 0 and len(outputs) == len(det):
+                    xywhs2 = xyxy2xywh(torch.tensor(outputs[:, 0:4]))
+                    outputs2 = deepsort.update(xywhs2, confs.cpu(), clss.cpu(), im0)
+                    if len(outputs2) > 0:
+                        for j, (output, conf) in enumerate(zip(outputs2, confs)):
+
+                            bboxes = output[0:4]
+                            id = output[4]
+                            cls = output[5]
+
+                            tracking[id].append(output)
+
+                            c = int(cls)  # integer class
+                            label = f'{names[c]}:{id}, Conf:{conf:.2f}'
+                            annotator.box_label(bboxes, label, color=colors(c, True))
+
+                            if save_txt:
+                                # to MOT format
+                                data = {
+                                    'frame_idx': frame_idx,
+                                    'id': id,
+                                    'cls': cls,
+                                    'x1': x1,
+                                    'y1': y1,
+                                    'x2': x2,
+                                    'y2': y2,
+                                    'conf': float(conf)
+                                }
+                                df2 = pd.DataFrame(data, index=[0])
+                                df2.to_csv(csv_path, mode='a', index=False, header=False)
+
+                    if len(outputs2) > 0 and len(outputs2) == len(outputs):
+                        xywhs3 = xyxy2xywh(torch.tensor(outputs2[:, 0:4]))
+                        outputs3 = deepsort.update(xywhs3, confs.cpu(), clss.cpu(), im0)
+                        if len(outputs3) > 0:
+                            for j, (output, conf) in enumerate(zip(outputs3, confs)):
+
+                                bboxes = output[0:4]
+                                id = output[4]
+                                cls = output[5]
+
+                                tracking[id].append(output)
+
+                                c = int(cls)  # integer class
+                                label = f'{names[c]}:{id}, Conf:{conf:.2f}'
+                                annotator.box_label(bboxes, label, color=colors(c, True))
+                                if save_txt:
+                                    # to MOT format
+                                    data = {
+                                        'frame_idx': frame_idx,
+                                        'id': id,
+                                        'cls': cls,
+                                        'x1': x1,
+                                        'y1': y1,
+                                        'x2': x2,
+                                        'y2': y2,
+                                        'conf': float(conf)
+                                    }
+                                    df3 = pd.DataFrame(data, index=[0])
+                                    df3.to_csv(csv_path, mode='a', index=False, header=False)
+
+                t5 = time_sync()
+                dt[3] += t5 - t4
+
 
                 LOGGER.info(f'{s}Done. YOLO:({t3 - t2:.3f}s), DeepSort:({t5 - t4:.3f}s)')
 
@@ -272,6 +312,39 @@ def detect(opt):
         print('Results saved to %s' % save_path)
         if platform == 'darwin':  # MacOS
             os.system('open ' + save_path)
+
+
+def check_output(outputs, confs, csv_path):
+    # draw boxes for visualization
+    if len(outputs) > 0:
+        for j, (output, conf) in enumerate(zip(outputs, confs)):
+
+            bboxes = output[0:4]
+            id = output[4]
+            cls = output[5]
+
+            tracking[id].append(output)
+
+            c = int(cls)  # integer class
+            label = f'{names[c]}:{id}, Conf:{conf:.2f}'
+            annotator.box_label(bboxes, label, color=colors(c, True))
+
+            if save_txt:
+                data = {
+                    'frame_idx': frame_idx,
+                    'id': id,
+                    'cls': cls,
+                    'x1': x1,
+                    'y1': y1,
+                    'x2': x2,
+                    'y2': y2,
+                    'conf': float(conf)
+                }
+                df = pd.DataFrame(data, index=[0])
+                df.to_csv(csv_path, mode='a', index=False, header=False)
+                ## csv format
+                ## lstm
+                ## prediction cvs
 
 
 if __name__ == '__main__':
