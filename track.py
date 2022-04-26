@@ -167,7 +167,7 @@ def detect(opt):
                 for c in det[:, -1].unique():
                     n = (det[:, -1] == c).sum()  # detections per class
                     s += f"{n} {names[int(c)]}{'s' * (n > 1)}, "  # add to string
-
+                ff=det[:, 0:4]
                 xywhs = xyxy2xywh(det[:, 0:4])
                 confs = det[:, 4]
                 clss = det[:, 5]
@@ -184,7 +184,7 @@ def detect(opt):
 
                     cx = int((x1 + x2) / 2)
                     cy = int((y1 + y2) / 2)
-                    cv2.circle(im0, (cx, cy), 7, (0, 20, 255), -1)  # current
+                    cv2.circle(im0, (cx, cy), 10, (0, 20, 255), 1)  # current
              #   xy=det[:, 0:4]
 
              #   annotator.box_label(xy, "det", color=colors(c, True))
@@ -207,8 +207,8 @@ def detect(opt):
 
                         x1_2 = output[0]
                         y1_2 = output[1]
-                        x2_2 = output[2] - output[0]
-                        y2_2 = output[3] - output[1]
+                        x2_2 = output[2]
+                        y2_2 = output[3]
 
                         cx2 = int((x1_2 + x2_2) / 2)
                         cy2 = int((y1_2 + y2_2) / 2)
@@ -216,7 +216,7 @@ def detect(opt):
                         #predicted = kf.predict(cx, cy)
                         # cv2.rectangle(frame, (x, y), (x2, y2), (255, 0, 0), 4)
 
-                        cv2.circle(im0, (cx2, cy2), 7, (255, 0, 0), 5)  # next red
+                        cv2.circle(im0, (cx2, cy2), 10, (255, 0, 0), 1)  # next blue
 
                         if save_txt:
                             # to MOT format
