@@ -210,66 +210,67 @@ def detect(opt):
                             df = pd.DataFrame(data, index=[0])
                             df.to_csv(csv_path, mode='a', index=False, header=False)
 
-                if len(outputs) > 0 and len(outputs) == len(det):
-                    xywhs2 = xyxy2xywh(torch.tensor(outputs[:, 0:4]))
-                    outputs2 = deepsort.update(xywhs2, confs.cpu(), clss.cpu(), im0)
-                    if len(outputs2) > 0:
-                        for j, (output, conf) in enumerate(zip(outputs2, confs)):
 
-                            bboxes = output[0:4]
-                            id = output[4]
-                            cls = output[5]
-
-                            tracking[id].append(output)
-
-                            c = int(cls)  # integer class
-                            label = f'{names[c]}:{id}, Conf:{conf:.2f}'
-                            annotator.box_label(bboxes, label, color=colors(c, True))
-
-                            if save_txt:
-                                # to MOT format
-                                data = {
-                                    'frame_idx': frame_idx,
-                                    'id': id,
-                                    'cls': cls,
-                                    'x1': x1,
-                                    'y1': y1,
-                                    'x2': x2,
-                                    'y2': y2,
-                                    'conf': float(conf)
-                                }
-                                df2 = pd.DataFrame(data, index=[0])
-                                df2.to_csv(csv_path, mode='a', index=False, header=False)
-
-                    if len(outputs2) > 0 and len(outputs2) == len(outputs):
-                        xywhs3 = xyxy2xywh(torch.tensor(outputs2[:, 0:4]))
-                        outputs3 = deepsort.update(xywhs3, confs.cpu(), clss.cpu(), im0)
-                        if len(outputs3) > 0:
-                            for j, (output, conf) in enumerate(zip(outputs3, confs)):
-
-                                bboxes = output[0:4]
-                                id = output[4]
-                                cls = output[5]
-
-                                tracking[id].append(output)
-
-                                c = int(cls)  # integer class
-                                label = f'{names[c]}:{id}, Conf:{conf:.2f}'
-                                annotator.box_label(bboxes, label, color=colors(c, True))
-                                if save_txt:
-                                    # to MOT format
-                                    data = {
-                                        'frame_idx': frame_idx,
-                                        'id': id,
-                                        'cls': cls,
-                                        'x1': x1,
-                                        'y1': y1,
-                                        'x2': x2,
-                                        'y2': y2,
-                                        'conf': float(conf)
-                                    }
-                                    df3 = pd.DataFrame(data, index=[0])
-                                    df3.to_csv(csv_path, mode='a', index=False, header=False)
+                # if len(outputs) > 0 and len(outputs) == len(det):
+                #     xywhs2 = xyxy2xywh(torch.tensor(outputs[:, 0:4]))
+                #     outputs2 = deepsort.update(xywhs2, confs.cpu(), clss.cpu(), im0)
+                #     if len(outputs2) > 0:
+                #         for j, (output, conf) in enumerate(zip(outputs2, confs)):
+                #
+                #             bboxes = output[0:4]
+                #             id = output[4]
+                #             cls = output[5]
+                #
+                #             tracking[id].append(output)
+                #
+                #             c = int(cls)  # integer class
+                #             label = f'{names[c]}:{id}, Conf:{conf:.2f}'
+                #             annotator.box_label(bboxes, label, color=colors(c, True))
+                #
+                #             if save_txt:
+                #                 # to MOT format
+                #                 data = {
+                #                     'frame_idx': frame_idx,
+                #                     'id': id,
+                #                     'cls': cls,
+                #                     'x1': x1,
+                #                     'y1': y1,
+                #                     'x2': x2,
+                #                     'y2': y2,
+                #                     'conf': float(conf)
+                #                 }
+                #                 df2 = pd.DataFrame(data, index=[0])
+                #                 df2.to_csv(csv_path, mode='a', index=False, header=False)
+                #
+                #     if len(outputs2) > 0 and len(outputs2) == len(outputs):
+                #         xywhs3 = xyxy2xywh(torch.tensor(outputs2[:, 0:4]))
+                #         outputs3 = deepsort.update(xywhs3, confs.cpu(), clss.cpu(), im0)
+                #         if len(outputs3) > 0:
+                #             for j, (output, conf) in enumerate(zip(outputs3, confs)):
+                #
+                #                 bboxes = output[0:4]
+                #                 id = output[4]
+                #                 cls = output[5]
+                #
+                #                 tracking[id].append(output)
+                #
+                #                 c = int(cls)  # integer class
+                #                 label = f'{names[c]}:{id}, Conf:{conf:.2f}'
+                #                 annotator.box_label(bboxes, label, color=colors(c, True))
+                #                 if save_txt:
+                #                     # to MOT format
+                #                     data = {
+                #                         'frame_idx': frame_idx,
+                #                         'id': id,
+                #                         'cls': cls,
+                #                         'x1': x1,
+                #                         'y1': y1,
+                #                         'x2': x2,
+                #                         'y2': y2,
+                #                         'conf': float(conf)
+                #                     }
+                #                     df3 = pd.DataFrame(data, index=[0])
+                #                     df3.to_csv(csv_path, mode='a', index=False, header=False)
 
                 t5 = time_sync()
                 dt[3] += t5 - t4
@@ -313,38 +314,6 @@ def detect(opt):
         if platform == 'darwin':  # MacOS
             os.system('open ' + save_path)
 
-
-def check_output(outputs, confs, csv_path):
-    # draw boxes for visualization
-    if len(outputs) > 0:
-        for j, (output, conf) in enumerate(zip(outputs, confs)):
-
-            bboxes = output[0:4]
-            id = output[4]
-            cls = output[5]
-
-            tracking[id].append(output)
-
-            c = int(cls)  # integer class
-            label = f'{names[c]}:{id}, Conf:{conf:.2f}'
-            annotator.box_label(bboxes, label, color=colors(c, True))
-
-            if save_txt:
-                data = {
-                    'frame_idx': frame_idx,
-                    'id': id,
-                    'cls': cls,
-                    'x1': x1,
-                    'y1': y1,
-                    'x2': x2,
-                    'y2': y2,
-                    'conf': float(conf)
-                }
-                df = pd.DataFrame(data, index=[0])
-                df.to_csv(csv_path, mode='a', index=False, header=False)
-                ## csv format
-                ## lstm
-                ## prediction cvs
 
 
 if __name__ == '__main__':
