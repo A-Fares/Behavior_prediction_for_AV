@@ -23,6 +23,7 @@ from pathlib import Path
 import cv2
 import torch
 import torch.backends.cudnn as cudnn
+from kalmanfilter import KalmanFilter
 
 from yolov5.models.experimental import attempt_load
 from yolov5.utils.downloads import attempt_download
@@ -61,6 +62,8 @@ def detect(opt):
                         )
 
     # Initialize
+    # Load Kalman filter to predict the trajectory
+    kf = KalmanFilter()
 
     half &= device.type != 'cpu'  # half precision only supported on CUDA
 
@@ -169,22 +172,51 @@ def detect(opt):
                 confs = det[:, 4]
                 clss = det[:, 5]
 
+                # Write results
+                for *xyxy, conf, cls in reversed(det):
+                    c = int(cls)  # integer class
+                    label = f'{names[c]} {conf:.2f}'
+                    annotator.box_label(xyxy, label, color=colors(8, True))
+                    x1 = xyxy[0]
+                    y1 = xyxy[1]
+                    x2 = xyxy[2]
+                    y2 = xyxy[3]
+
+                    cx = int((x1 + x2) / 2)
+                    cy = int((y1 + y2) / 2)
+                    cv2.circle(im0, (cx, cy), 7, (0, 20, 255), -1)  # current
+             #   xy=det[:, 0:4]
+
+             #   annotator.box_label(xy, "det", color=colors(c, True))
+
                 # pass detections to deepsort
                 t4 = time_sync()
+
                 outputs = deepsort.update(xywhs.cpu(), confs.cpu(), clss.cpu(), im0)
                 # draw boxes for visualization
                 if len(outputs) > 0:
-                    for j, (output, conf) in enumerate(zip(outputs, confs)):
+                    for output, conf in zip(outputs, confs):
 
                         bboxes = output[0:4]
                         id = output[4]
                         cls = output[5]
 
-                        tracking[id].append(output)
-
                         c = int(cls)  # integer class
                         label = f'{names[c]}:{id}, Conf:{conf:.2f}'
                         annotator.box_label(bboxes, label, color=colors(c, True))
+
+                        x1_2 = output[0]
+                        y1_2 = output[1]
+                        x2_2 = output[2] - output[0]
+                        y2_2 = output[3] - output[1]
+
+                        cx2 = int((x1_2 + x2_2) / 2)
+                        cy2 = int((y1_2 + y2_2) / 2)
+
+                        #predicted = kf.predict(cx, cy)
+                        # cv2.rectangle(frame, (x, y), (x2, y2), (255, 0, 0), 4)
+
+                        cv2.circle(im0, (cx2, cy2), 7, (255, 0, 0), 5)  # next red
 
                         if save_txt:
                             # to MOT format
@@ -209,6 +241,34 @@ def detect(opt):
                             }
                             df = pd.DataFrame(data, index=[0])
                             df.to_csv(csv_path, mode='a', index=False, header=False)
+
+                # if len(outputs) > 0 and len(outputs) == len(det):
+                #     xywhs2 = xyxy2xywh(torch.tensor(outputs[:, 0:4]))
+                #     outputs2 = deepsort.update(xywhs2, confs.cpu(), clss.cpu(), im0)
+                #     if len(outputs2) > 0:
+                #         for j, (output, conf) in enumerate(zip(outputs2, confs)):
+                #
+                #             bboxes = output[0:4]
+                #             id = output[4]
+                #             cls = output[5]
+                #
+                #             tracking[id].append(output)
+                #
+                #             c = int(cls)  # integer class
+                #             label = f'{names[c]}:{id}, Conf:{conf:.2f}'
+                #             annotator.box_label(bboxes, label, color=colors(5, True))
+                #     if len(outputs2) > 0 and len(outputs2) == len(outputs):
+                #         xywhs3 = xyxy2xywh(torch.tensor(outputs2[:, 0:4]))
+                #         outputs3 = deepsort.update(xywhs3, confs.cpu(), clss.cpu(), im0)
+                #         if len(outputs3) > 0:
+                #             for j, (output, conf) in enumerate(zip(outputs3, confs)):
+                #                 bboxes = output[0:4]
+                #                 id = output[4]
+                #                 cls = output[5]
+                #
+                #                 c = int(cls)  # integer class
+                #                 label = f'{names[c]}:{id}, Conf:{conf:.2f}'
+                #                 annotator.box_label(bboxes, label, color=colors(12, True))
 
 
                 # if len(outputs) > 0 and len(outputs) == len(det):
