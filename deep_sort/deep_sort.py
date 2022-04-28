@@ -47,13 +47,13 @@ class DeepSort(object):
                 show_supported_models()
                 exit()
 
-        max_cosine_distance = max_dist
+        self.max_dist = max_dist
         metric = NearestNeighborDistanceMetric(
-            "euclidean", max_cosine_distance, nn_budget)
+            "cosine", self.max_dist, nn_budget)
         self.tracker = Tracker(
             metric, max_iou_distance=max_iou_distance, max_age=max_age, n_init=n_init)
 
-    def update(self, bbox_xywh, confidences, classes, ori_img, use_yolo_preds=False):
+    def update(self, bbox_xywh, confidences, classes, ori_img):
         self.height, self.width = ori_img.shape[:2]
         # generate detections
         features = self._get_features(bbox_xywh, ori_img)
@@ -67,26 +67,24 @@ class DeepSort(object):
 
         # update tracker
         self.tracker.predict()
-        self.tracker.update(detections, classes)
+        self.tracker.update(detections, classes, confidences)
 
         # output bbox identities
         outputs = []
         for track in self.tracker.tracks:
             if not track.is_confirmed() or track.time_since_update > 1:
                 continue
-            if use_yolo_preds:
-                det = track.get_yolo_pred()
-                x1, y1, x2, y2 = self._tlwh_to_xyxy(det.tlwh)
-            else:
-                box = track.to_tlwh()
-                x1, y1, x2, y2 = self._tlwh_to_xyxy(box)
+
+            box = track.to_tlwh()
+            x1, y1, x2, y2 = self._tlwh_to_xyxy(box)
+
             track_id = track.track_id
             class_id = track.class_id
-            outputs.append(np.array([x1, y1, x2, y2, track_id, class_id], dtype=np.int))
+            conf = track.conf
+            outputs.append(np.array([x1, y1, x2, y2, track_id, class_id, conf]))
         if len(outputs) > 0:
             outputs = np.stack(outputs, axis=0)
         return outputs
-
 
     @staticmethod
     def _xywh_to_tlwh(bbox_xywh):
@@ -109,9 +107,9 @@ class DeepSort(object):
     def _tlwh_to_xyxy(self, bbox_tlwh):
         x, y, w, h = bbox_tlwh
         x1 = max(int(x), 0)
-        x2 = min(int(x+w), self.width - 1)
+        x2 = min(int(x + w), self.width - 1)
         y1 = max(int(y), 0)
-        y2 = min(int(y+h), self.height - 1)
+        y2 = min(int(y + h), self.height - 1)
         return x1, y1, x2, y2
 
     def increment_ages(self):

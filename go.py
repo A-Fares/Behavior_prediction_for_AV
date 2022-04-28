@@ -7,7 +7,8 @@ if __name__ == '__main__':
     parser.add_argument('--yolo_model', nargs='+', type=str, default='yolov5m.pt', help='model.pt path(s)')
     parser.add_argument('--weights', nargs='+', type=str, default='weights/yolov5s.pt', help='model.pt path(s)')
     parser.add_argument('--deep_sort_model', type=str, default='osnet_x0_25')
-    parser.add_argument('--source', type=str, default='data/Live_test.mp4', help='source')  # file/folder, 0 for webcam
+    parser.add_argument('--source', type=str, default='data/MOT17-13-raw.mp4',
+                        help='source')  # file/folder, 0 for webcam
     parser.add_argument('--output', type=str, default='inference/output', help='output folder')  # output folder
     parser.add_argument('--imgsz', '--img', '--img-size', nargs='+', type=int, default=[640], help='inference size h,w')
     parser.add_argument('--conf-thres', type=float, default=0.5, help='object confidence threshold')
@@ -18,7 +19,7 @@ if __name__ == '__main__':
     parser.add_argument('--save-vid', default=True, help='save video tracking results')
     parser.add_argument('--save-txt', default=True, action='store_true', help='save MOT compliant results to *.txt')
     # class 0 is person, 1 is bycicle, 2 is car... 79 is oven
-    parser.add_argument('--classes', default=[0,1,2], nargs='+', type=int,
+    parser.add_argument('--classes', default=[0, 1, 2], nargs='+', type=int,
                         help='filter by class: --class 0, or --class 16 17')
     parser.add_argument('--agnostic-nms', action='store_true', help='class-agnostic NMS')
     parser.add_argument('--augment', action='store_true', help='augmented inference')
@@ -28,6 +29,7 @@ if __name__ == '__main__':
     parser.add_argument('--visualize', action='store_true', help='visualize features')
     parser.add_argument('--max-det', type=int, default=1000, help='maximum detection per image')
     parser.add_argument('--dnn', action='store_true', help='use OpenCV DNN for ONNX inference')
+    parser.add_argument('--save-crop', action='store_true', help='save cropped prediction boxes')
     parser.add_argument('--update', default=True, action='store_true', help='update all models')
     parser.add_argument('--project', default='runs/track', help='save results to project/name')
     parser.add_argument('--name', default='exp', help='save results to project/name')
