@@ -15,17 +15,12 @@ sys.path.insert(0, './yolov5')
 
 import argparse
 import os
-import platform
 import shutil
-import time
 from pathlib import Path
-import numpy as np
 import cv2
 import torch
 import torch.backends.cudnn as cudnn
 
-from yolov5.models.experimental import attempt_load
-from yolov5.utils.downloads import attempt_download
 from yolov5.models.common import DetectMultiBackend
 from yolov5.utils.datasets import LoadImages, LoadStreams, VID_FORMATS
 from yolov5.utils.general import (LOGGER, check_img_size, non_max_suppression, scale_coords,
@@ -99,6 +94,9 @@ def detect(opt):
         dataset = LoadImages(source, img_size=imgsz, stride=stride, auto=pt)
         nr_sources = 1
     vid_path, vid_writer, txt_path = [None] * nr_sources, [None] * nr_sources, [None] * nr_sources
+
+    # DataFrame columns
+    df_columns = ['frame_idx', 'id', 'bb_left', 'bb_top', 'bb_width', 'bb_height', 'conf', 'x', 'y', 'z']
 
     # initialize deepsort
     cfg = get_config()
@@ -189,7 +187,7 @@ def detect(opt):
                 # Write results
                 for *xyxy, conf, cls in reversed(det):
                     c = int(cls)  # integer class
-                    label = f'{names[c]} {conf:.2f}'
+                    label = ''
                     annotator.box_label(xyxy, label, color=colors(8, True))
                     x1 = xyxy[0]
                     y1 = xyxy[1]
@@ -198,7 +196,7 @@ def detect(opt):
 
                     cx = int((x1 + x2) / 2)
                     cy = int((y1 + y2) / 2)
-                    cv2.circle(im0, (cx, cy), 10, (0, 20, 255), 2)  # current
+                    cv2.circle(im0, (cx, cy), 3, (0, 20, 255), 2)  # current
 
                 # pass detections to deepsort
                 t4 = time_sync()
@@ -210,7 +208,7 @@ def detect(opt):
                     for j, (output) in enumerate(outputs[i]):
 
                         bboxes = output[0:4]
-                        id = output[4]
+                        id = int(output[4])
                         cls = output[5]
                         conf = output[6]
 
@@ -220,7 +218,7 @@ def detect(opt):
                         y2_2 = output[3]
                         cx2 = int((x1_2 + x2_2) / 2)
                         cy2 = int((y1_2 + y2_2) / 2)
-                        cv2.circle(im0, (cx2, cy2), 10, (255, 0, 0), 2)  # next blue
+                        cv2.circle(im0, (cx2, cy2), 3, (255, 0, 0), 2)  # next blue
 
                         if save_txt:
                             # to MOT format
@@ -235,18 +233,23 @@ def detect(opt):
                             data = {
                                 'frame_idx': frame_idx,
                                 'id': id,
-                                'cls': cls,
-                                'x1': x1,
-                                'y1': y1,
-                                'x2': x2,
-                                'y2': y2,
-                                'conf': float(conf)
+                                'bb_left': bbox_left,
+                                'bb_top': bbox_top,
+                                'bb_width': bbox_w,
+                                'bb_height': bbox_h,
+                                'conf': float(conf),
+                                'x': -1,
+                                'y': -1,
+                                'z': -1
                             }
                             df = pd.DataFrame(data, index=[0])
+                            if not all(item in df.columns for item in df_columns):
+                                df.columns = df_columns
                             df.to_csv(csv_path, mode='a', index=False, header=False)
+
                         if save_vid or save_crop or show_vid:  # Add bbox to image
                             c = int(cls)  # integer class
-                            label = f'{names[c]}:{id}, Conf:{conf:.2f}'
+                            label = f'{id}'
                             annotator.box_label(bboxes, label, color=colors(c, True))
                             if save_crop:
                                 txt_file_name = txt_file_name if (isinstance(path, list) and len(path) > 1) else ''
@@ -254,7 +257,6 @@ def detect(opt):
                                     c] / f'{id}' / f'{p.stem}.jpg', BGR=True)
 
                 LOGGER.info(f'{s}Done. YOLO:({t3 - t2:.3f}s), DeepSort:({t5 - t4:.3f}s)')
-
             else:
                 deepsort_list[i].increment_ages()
                 LOGGER.info('No detections')
@@ -291,9 +293,10 @@ def detect(opt):
     if update:
         strip_optimizer(yolo_model)  # update model (to fix SourceChangeWarning)
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--yolo_model', nargs='+', type=str, default='yolov5m.pt', help='model.pt path(s)')
+    parser.add_argument('--yolo_model', nargs='+', type=str, default='crowdhuman_yolov5m.pt', help='model.pt path(s)')
     parser.add_argument('--deep_sort_model', type=str, default='osnet_x0_25')
     parser.add_argument('--source', type=str, default='0', help='source')  # file/folder, 0 for webcam
     parser.add_argument('--output', type=str, default='inference/output', help='output folder')  # output folder
