@@ -78,6 +78,10 @@ class Tracker:
                 self.kf, detections[detection_idx], classes[detection_idx], confidences[detection_idx])
         for track_idx in unmatched_tracks:
             self.tracks[track_idx].mark_missed()
+            pred_bbox = self.tracks[track_idx].to_tlbr()
+
+            self.tracks[track_idx].update(
+                self.kf, detections[detection_idx], classes[detection_idx], confidences[detection_idx])
         for detection_idx in unmatched_detections:
             self._initiate_track(detections[detection_idx], classes[detection_idx].item(), confidences[detection_idx].item())
         self.tracks = [t for t in self.tracks if not t.is_deleted()]

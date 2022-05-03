@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="358ec643-55b7-42a0-9ad2-72ec74a17b42" name="Changes" comment="update track.py with deepsort">
+    <list default="true" id="358ec643-55b7-42a0-9ad2-72ec74a17b42" name="Changes" comment="update detect crowded human weights">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/deep_sort/configs/deep_sort.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/deep_sort/configs/deep_sort.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/deep_sort/sort/tracker.py" beforeDir="false" afterPath="$PROJECT_DIR$/deep_sort/sort/tracker.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/go.py" beforeDir="false" afterPath="$PROJECT_DIR$/go.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/track.py" beforeDir="false" afterPath="$PROJECT_DIR$/track.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -97,7 +96,7 @@
       <workItem from="1650954010743" duration="7165000" />
       <workItem from="1651119224893" duration="10552000" />
       <workItem from="1651159178913" duration="1727000" />
-      <workItem from="1651296827724" duration="8195000" />
+      <workItem from="1651296827724" duration="22277000" />
     </task>
     <task id="LOCAL-00001" summary="download yolov5m weights">
       <created>1650502794246</created>
@@ -155,7 +154,14 @@
       <option name="project" value="LOCAL" />
       <updated>1651128867846</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="update detect crowded human weights">
+      <created>1651415220830</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1651415220830</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -180,20 +186,26 @@
     <MESSAGE value="visualize the prediction" />
     <MESSAGE value="update the visualization for prediction" />
     <MESSAGE value="update track.py with deepsort" />
-    <option name="LAST_COMMIT_MESSAGE" value="update track.py with deepsort" />
+    <MESSAGE value="update detect crowded human weights" />
+    <option name="LAST_COMMIT_MESSAGE" value="update detect crowded human weights" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/track.py</url>
-          <line>60</line>
-          <option name="timeStamp" value="2" />
+          <url>file://$PROJECT_DIR$/deep_sort/sort/tracker.py</url>
+          <line>79</line>
+          <option name="timeStamp" value="4" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/track.py</url>
-          <line>61</line>
-          <option name="timeStamp" value="3" />
+          <url>file://$PROJECT_DIR$/deep_sort/sort/tracker.py</url>
+          <line>80</line>
+          <option name="timeStamp" value="5" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/deep_sort/sort/tracker.py</url>
+          <line>54</line>
+          <option name="timeStamp" value="6" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>
@@ -212,6 +224,6 @@
     </watches-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/Behavior_prediction_for_AV$go.coverage" NAME="go Coverage Results" MODIFIED="1651378018056" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Behavior_prediction_for_AV$go.coverage" NAME="go Coverage Results" MODIFIED="1651554549738" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
