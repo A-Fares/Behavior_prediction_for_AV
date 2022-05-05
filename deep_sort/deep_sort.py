@@ -69,6 +69,10 @@ class DeepSort(object):
         self.tracker.predict()
         self.tracker.update(detections, classes, confidences)
 
+        # update next frame
+    #    self.tracker.predict_next()
+    #    self.tracker.update_next(detections, classes, confidences)
+
         # output bbox identities
         outputs = []
         for track in self.tracker.tracks:
@@ -76,7 +80,9 @@ class DeepSort(object):
                 continue
 
             box = track.to_tlwh()
+           # box_pre=track.to_tlbr()
             x1, y1, x2, y2 = self._tlwh_to_xyxy(box)
+            #x1_pre, y1_pre, x2_pre, y2_pre = self._tlwh_to_xyxy(box_pre)
 
             track_id = track.track_id
             class_id = track.class_id
@@ -84,7 +90,23 @@ class DeepSort(object):
             outputs.append(np.array([x1, y1, x2, y2, track_id, class_id, conf]))
         if len(outputs) > 0:
             outputs = np.stack(outputs, axis=0)
-        return outputs
+
+        # output bbox identities
+        pred_outputs = []
+        # for track in self.tracker.pred_tracks:
+        #     if not track.is_confirmed() or track.time_since_update > 1:
+        #         continue
+        #
+        #     box = track.to_tlwh()
+        #     x1, y1, x2, y2 = self._tlwh_to_xyxy(box)
+        #
+        #     track_id = track.track_id
+        #     class_id = track.class_id
+        #     conf = track.conf
+        #     pred_outputs.append(np.array([x1, y1, x2, y2, track_id, class_id, conf]))
+        # if len(outputs) > 0:
+        #     pred_outputs = np.stack(pred_outputs, axis=0)
+        return outputs, pred_outputs
 
     @staticmethod
     def _xywh_to_tlwh(bbox_xywh):

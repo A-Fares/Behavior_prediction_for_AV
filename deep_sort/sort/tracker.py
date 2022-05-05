@@ -4,6 +4,7 @@ import numpy as np
 from . import kalman_filter
 from . import linear_assignment
 from . import iou_matching
+from .detection import Detection
 from .track import Track
 
 
@@ -44,6 +45,7 @@ class Tracker:
 
         self.kf = kalman_filter.KalmanFilter()
         self.tracks = []
+        self.pred_tracks = []
         self._next_id = 1
 
     def predict(self):
@@ -52,6 +54,14 @@ class Tracker:
         This function should be called once every time step, before `update`.
         """
         for track in self.tracks:
+            track.predict(self.kf)
+
+    def predict_next(self):
+        """Propagate track state distributions one time step forward.
+
+        This function should be called once every time step, before `update`.
+        """
+        for track in self.pred_tracks:
             track.predict(self.kf)
 
     def increment_ages(self):
@@ -74,22 +84,60 @@ class Tracker:
 
         # Update track set.
         for track_idx, detection_idx in matches:
+            #pred_bboxx1 = self.tracks[track_idx].to_tlbr()
             self.tracks[track_idx].update(
                 self.kf, detections[detection_idx], classes[detection_idx], confidences[detection_idx])
+
+            pred_bboxx2 = self.tracks[track_idx].to_tlbr()
         for track_idx in unmatched_tracks:
             self.tracks[track_idx].mark_missed()
-            pred_bbox = self.tracks[track_idx].to_tlbr()
-
-            self.tracks[track_idx].update(
-                self.kf, detections[detection_idx], classes[detection_idx], confidences[detection_idx])
+        #     pred_bbox = self.tracks[track_idx].to_tlbr()
+        #     # pred_bbox = Detection(pred_bbox, confidences[detection_idx], features[detection_idx])
+        #     self.tracks[track_idx].update(
+        #         self.kf, pred_bbox, classes[detection_idx], confidences[detection_idx])
         for detection_idx in unmatched_detections:
-            self._initiate_track(detections[detection_idx], classes[detection_idx].item(), confidences[detection_idx].item())
+            self._initiate_track(detections[detection_idx], classes[detection_idx].item(),
+                                 confidences[detection_idx].item())
         self.tracks = [t for t in self.tracks if not t.is_deleted()]
 
         # Update distance metric.
         active_targets = [t.track_id for t in self.tracks if t.is_confirmed()]
         features, targets = [], []
         for track in self.tracks:
+            if not track.is_confirmed():
+                continue
+            features += track.features
+            targets += [track.track_id for _ in track.features]
+            track.features = []
+        self.metric.partial_fit(np.asarray(features), np.asarray(targets), active_targets)
+
+    def update_next(self, detections, classes, confidences):
+        # Run matching cascade.
+        matches, unmatched_tracks, unmatched_detections = \
+            self._match(detections)
+        self.pred_tracks = self.tracks.copy()
+        # Update track set.
+        for track_idx, detection_idx in matches:
+            pred_bboxx1 = self.tracks[track_idx].to_tlbr()
+            self.pred_tracks[track_idx].update(
+                self.kf, detections[detection_idx], classes[detection_idx], confidences[detection_idx])
+            pred_bboxx2 = self.tracks[track_idx].to_tlbr()
+        for track_idx in unmatched_tracks:
+            self.pred_tracks[track_idx].mark_missed()
+
+            pred_bbox = self.tracks[track_idx].to_tlbr()
+            # # pred_bbox = Detection(pred_bbox, confidences[detection_idx], features[detection_idx])
+            # self.pred_tracks[track_idx].update(
+            #     self.kf, pred_bbox, classes[detection_idx], confidences[detection_idx])
+        for detection_idx in unmatched_detections:
+            self._initiate_track(detections[detection_idx], classes[detection_idx].item(),
+                                 confidences[detection_idx].item())
+        self.pred_tracks = [t for t in self.pred_tracks if not t.is_deleted()]
+
+        # Update distance metric.
+        active_targets = [t.track_id for t in self.pred_tracks if t.is_confirmed()]
+        features, targets = [], []
+        for track in self.pred_tracks:
             if not track.is_confirmed():
                 continue
             features += track.features

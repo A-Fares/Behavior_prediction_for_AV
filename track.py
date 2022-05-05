@@ -29,6 +29,7 @@ from yolov5.utils.torch_utils import select_device, time_sync
 from yolov5.utils.plots import Annotator, colors, save_one_box
 from deep_sort.utils.parser import get_config
 from deep_sort.deep_sort import DeepSort
+from kalmanfilter import KalmanFilter
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # yolov5 deepsort root directory
@@ -48,6 +49,8 @@ def detect(opt):
     # Initialize
     device = select_device(opt.device)
     half &= device.type != 'cpu'  # half precision only supported on CUDA
+
+    kf = KalmanFilter()
 
     # The MOT16 evaluation runs multiple inference streams in parallel, each one writing to
     # its own .txt file. Hence, in that case, the output folder is not restored
@@ -115,6 +118,7 @@ def detect(opt):
             )
         )
     outputs = [None] * nr_sources
+    pred_outputs = [None] * nr_sources
 
     # Get names and colors
     names = model.module.names if hasattr(model, 'module') else model.names
@@ -200,7 +204,7 @@ def detect(opt):
 
                 # pass detections to deepsort
                 t4 = time_sync()
-                outputs[i] = deepsort_list[i].update(xywhs.cpu(), confs.cpu(), clss.cpu(), im0)
+                outputs[i], pred_outputs[i] = deepsort_list[i].update(xywhs.cpu(), confs.cpu(), clss.cpu(), im0)
                 t5 = time_sync()
                 dt[3] += t5 - t4
                 # draw boxes for visualization
@@ -219,6 +223,10 @@ def detect(opt):
                         cx2 = int((x1_2 + x2_2) / 2)
                         cy2 = int((y1_2 + y2_2) / 2)
                         cv2.circle(im0, (cx2, cy2), 3, (255, 0, 0), 2)  # next blue
+
+                        if id == 2:
+                            predicted = kf.predict(cx2, cy2)
+                            cv2.circle(im0, (predicted[0], predicted[1]), 3, (0, 255, 0), 2)  # predicted green
 
                         if save_txt:
                             # to MOT format
